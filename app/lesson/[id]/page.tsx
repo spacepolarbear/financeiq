@@ -274,7 +274,37 @@ function renderSection(section, index) {
           ))}
         </div>
       )
+    case 'pull':
+  return (
+    <div key={index} style={{
+      borderLeft: '3px solid var(--penny-500)',
+      paddingLeft: '16px',
+      background: 'var(--penny-50)',
+      borderRadius: '0 10px 10px 0',
+      padding: '12px 16px',
+    }}>
+      <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--penny-600)', lineHeight: 1.5, margin: 0 }}>
+        {section.content}
+      </p>
+    </div>
+  )
 
+case 'visual':
+  return (
+    <div key={index} style={{
+      background: 'white',
+      border: '1px solid var(--stone-200)',
+      borderRadius: '14px',
+      padding: '20px',
+    }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--stone-400)', marginBottom: '14px' }}>
+        {section.label}
+      </div>
+      <div style={{ fontSize: '13.5px', color: 'var(--stone-600)', lineHeight: 1.7 }}>
+        {section.content}
+      </div>
+    </div>
+  )
     default:
       return null
   }
@@ -313,7 +343,16 @@ export default function LessonPage() {
         .maybeSingle()
 
       // Use real data if available, otherwise use mock
-      const lessonToUse = lessonData || MOCK_LESSONS[lessonId] || MOCK_LESSONS['1-1']
+      let lessonToUse = lessonData || MOCK_LESSONS[lessonId] || MOCK_LESSONS['1-1']
+
+// Parse content JSON if it's a string
+if (lessonToUse.content && typeof lessonToUse.content === 'string') {
+  try {
+    lessonToUse = { ...lessonToUse, sections: JSON.parse(lessonToUse.content) }
+  } catch {
+    // Keep as plain text if parsing fails
+  }
+}
       setLesson(lessonToUse)
       setLoading(false)
     }
@@ -541,7 +580,14 @@ export default function LessonPage() {
 
           {/* Lesson sections */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {lesson.sections.map((section, i) => renderSection(section, i))}
+            {lesson.sections 
+  ? lesson.sections.map((section, i) => renderSection(section, i))
+  : lesson.content?.split('\n\n').map((block, i) => (
+      <div key={i} className="txt" style={{ fontSize: '15px', color: 'var(--stone-700)', lineHeight: 1.8, fontWeight: 300 }}>
+        {block.replace(/^##\s/, '').replace(/\*\*(.*?)\*\*/g, '$1')}
+      </div>
+    ))
+}
           </div>
 
         </div>

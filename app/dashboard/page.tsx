@@ -433,6 +433,7 @@ export default function DashboardPage() {
             <div
               key={mod.id}
               style={S.moduleCard}
+              onClick={() => router.push(`/module/${mod.id}`)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = mod.border
                 e.currentTarget.style.boxShadow = 'var(--shadow-card-md)'

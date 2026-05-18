@@ -12,6 +12,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCurrentUser, saveQuizAnswer, updateProfile } from '../../lib/supabase'
+import { useTheme } from '../../lib/theme'
+
 
 // ─── Quiz Data ───────────────────────────────────────────────
 const QUESTIONS = [
@@ -141,6 +143,7 @@ export default function OnboardingPage() {
   const [saving, setSaving]         = useState(false)
   const [done, setDone]             = useState(false)
   const [displayName, setDisplayName] = useState('')
+  const { isDark } = useTheme()
 
   const question = QUESTIONS[currentQ]
   const progress = ((currentQ) / QUESTIONS.length) * 100
@@ -371,7 +374,7 @@ export default function OnboardingPage() {
       boxShadow: selected ? 'var(--shadow-penny)' : 'var(--shadow-sm)',
     }),
     optionEmoji: { fontSize: '20px', flexShrink: 0, marginTop: '1px' },
-    optionLabel: { fontSize: '14px', fontWeight: 600, color: 'var(--stone-900)', marginBottom: '2px' },
+    optionLabel: { fontSize: '14px', fontWeight: 600, color: isDark ? 'var(--stone-100)' : 'var(--stone-900)', marginBottom: '2px' },
     optionSub: { fontSize: '12px', color: 'var(--stone-500)', lineHeight: 1.4 },
     skipBtn: {
       display: 'flex',
