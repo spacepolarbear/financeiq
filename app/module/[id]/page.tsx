@@ -222,7 +222,7 @@ export default function ModulePage() {
                   Up Next
                 </div>
                 <button
-                  onClick={() => router.push(`/lesson/${firstIncomplete.id}`)}
+                  onClick={() => router.push(`/lesson/${firstIncomplete.lesson_number.replace('.', '-')}`)}
                   style={{
                     width: '100%',
                     background: `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`,
@@ -279,7 +279,7 @@ export default function ModulePage() {
             return (
               <button
                 key={lesson.id}
-                onClick={() => router.push(`/lesson/${lesson.id}`)}
+                onClick={() => router.push(`/lesson/${lesson.lesson_number.replace('.', '-')}`)}
                 style={{
                   background: isCompleted ? 'var(--forest-50)' : 'white',
                   border: `1px solid ${isCompleted ? 'var(--forest-200)' : 'var(--stone-200)'}`,

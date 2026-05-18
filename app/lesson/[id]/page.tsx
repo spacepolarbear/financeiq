@@ -343,7 +343,7 @@ export default function LessonPage() {
         .maybeSingle()
 
       // Use real data if available, otherwise use mock
-      let lessonToUse = lessonData || MOCK_LESSONS[lessonId] || MOCK_LESSONS['1-1']
+    let lessonToUse = lessonData || MOCK_LESSONS[lessonId] || MOCK_LESSONS['1-1']
 
 // Parse content JSON if it's a string
 if (lessonToUse.content && typeof lessonToUse.content === 'string') {
@@ -353,7 +353,19 @@ if (lessonToUse.content && typeof lessonToUse.content === 'string') {
     // Keep as plain text if parsing fails
   }
 }
-      setLesson(lessonToUse)
+
+// Parse questions JSON if it's a string
+if (lessonToUse.questions && typeof lessonToUse.questions === 'string') {
+  try {
+    lessonToUse = { ...lessonToUse, quiz: { questions: JSON.parse(lessonToUse.questions) } }
+  } catch {
+    // Fall back to no quiz
+  }
+} else if (lessonToUse.questions && Array.isArray(lessonToUse.questions)) {
+  lessonToUse = { ...lessonToUse, quiz: { questions: lessonToUse.questions } }
+}
+
+setLesson(lessonToUse)
       setLoading(false)
     }
     load()
@@ -375,16 +387,16 @@ if (lessonToUse.content && typeof lessonToUse.content === 'string') {
   }, [lesson])
 
   // ─── Handle quiz complete ───
-  async function handleQuizComplete(passed, score) {
-    setQuizPassed(passed)
-    setQuizScore(score)
+async function handleQuizComplete(passed, score) {
+  setQuizPassed(passed)
+  setQuizScore(score)
 
-    if (lesson.has_simulation) {
-      setPhase('simulation')
-    } else {
-      await finishLesson(score, 0)
-    }
+  if (lesson.has_simulation && lesson.simulation) {
+    setPhase('simulation')
+  } else {
+    await finishLesson(score, 0)
   }
+}
 
   // ─── Handle simulation complete ───
   async function handleSimComplete(xpBonus) {
