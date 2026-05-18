@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getCurrentUser, getProfile, getStreak, getLessonProgress, signOut } from '../../lib/supabase'
+import { supabase, getCurrentUser, getProfile, getStreak, getLessonProgress, signOut } from '../../lib/supabase'
 
 // ─── Module data (matches our 12 modules) ───────────────────
 const MODULES = [
@@ -47,31 +47,42 @@ export default function DashboardPage() {
   const [progress, setProgress]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [activeTab, setActiveTab] = useState('home')
-
+  const [nextLesson, setNextLesson] = useState(null)
   // ─── Load user data ───
   useEffect(() => {
     async function loadData() {
-      const { user: currentUser } = await getCurrentUser()
+  const { user: currentUser } = await getCurrentUser()
 
-      if (!currentUser) {
-        router.push('/auth')
-        return
-      }
+  if (!currentUser) {
+    router.push('/auth')
+    return
+  }
 
-      setUser(currentUser)
+  setUser(currentUser)
 
-      // Load profile, streak, and progress in parallel
-      const [profileRes, streakRes, progressRes] = await Promise.all([
-        getProfile(currentUser.id),
-        getStreak(currentUser.id),
-        getLessonProgress(currentUser.id),
-      ])
+  // Load profile, streak, and progress in parallel
+  const [profileRes, streakRes, progressRes, lessonsRes, completedRes] = await Promise.all([
+    getProfile(currentUser.id),
+    getStreak(currentUser.id),
+    getLessonProgress(currentUser.id),
+    supabase.from('lessons').select('*').order('module_id', { ascending: true }).order('sort_order', { ascending: true }),
+    supabase.from('lesson_progress').select('lesson_id').eq('user_id', currentUser.id).eq('status', 'completed'),
+  ])
 
-      setProfile(profileRes.data)
-      setStreak(streakRes.data)
-      setProgress(progressRes.data || [])
-      setLoading(false)
-    }
+  setProfile(profileRes.data)
+  setStreak(streakRes.data)
+  setProgress(progressRes.data || [])
+
+  // Find next incomplete lesson
+  const completedIds = new Set((completedRes.data || []).map(l => l.lesson_id))
+const next = (lessonsRes.data || []).find(l => !completedIds.has(l.id))
+console.log('All lessons:', lessonsRes.data?.length)
+console.log('Completed IDs:', [...completedIds])
+console.log('Next lesson:', next)
+if (next) setNextLesson(next)
+
+  setLoading(false)
+}
     loadData()
   }, [router])
 
@@ -385,40 +396,41 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Today's Focus */}
-        <div style={S.sectionTitle}>
-          ⚡ Today's Focus
-        </div>
-        <div style={{
-          background: 'linear-gradient(135deg, var(--penny-500), var(--penny-600))',
-          borderRadius: '16px',
-          padding: '20px',
-          color: 'white',
-          marginBottom: '28px',
-          cursor: 'pointer',
-        }}onClick={() => router.push('/lesson/1-1')}>
-          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', opacity: 0.7, marginBottom: '8px', letterSpacing: '1px' }}>
-            LESSON 1.1 · BEGINNER · 12 MIN
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
-            Why Most People Never Get Ahead
-          </div>
-          <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '16px', lineHeight: 1.5 }}>
-            The psychology of spending blind. Why awareness — not discipline — is the real first step.
-          </div>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '8px',
-            padding: '8px 16px',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}>
-            Start Lesson → <span style={{ fontSize: '12px', opacity: 0.8, fontFamily: 'var(--font-mono)' }}>+10 XP</span>
-          </div>
-        </div>
+       {/* Today's Focus */}
+<div style={S.sectionTitle}>
+  ⚡ Today's Focus
+</div>
+<div style={{
+  background: 'linear-gradient(135deg, var(--penny-500), var(--penny-600))',
+  borderRadius: '16px',
+  padding: '20px',
+  color: 'white',
+  marginBottom: '28px',
+  cursor: 'pointer',
+}}
+onClick={() => router.push(`/lesson/${nextLesson ? nextLesson.lesson_number.replace('.', '-') : '1-1'}`)}>
+  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', opacity: 0.7, marginBottom: '8px', letterSpacing: '1px' }}>
+    {nextLesson ? `LESSON ${nextLesson.lesson_number} · ${nextLesson.difficulty?.toUpperCase()} · ${nextLesson.estimated_minutes} MIN` : 'LESSON 1.1 · BEGINNER · 3 MIN'}
+  </div>
+  <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
+    {nextLesson ? nextLesson.title : 'Why You Feel Broke Even When You\'re Working'}
+  </div>
+  <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '16px', lineHeight: 1.5 }}>
+    {nextLesson ? `Module ${nextLesson.module_id} · ${nextLesson.difficulty} lesson` : 'The psychology of spending blind.'}
+  </div>
+  <div style={{
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'rgba(255,255,255,0.2)',
+    borderRadius: '8px',
+    padding: '8px 16px',
+    fontSize: '14px',
+    fontWeight: 600,
+  }}>
+    Start Lesson → <span style={{ fontSize: '12px', opacity: 0.8, fontFamily: 'var(--font-mono)' }}>+{nextLesson?.xp_reward || 10} XP</span>
+  </div>
+</div>
 
         {/* Learning Path */}
         <div style={S.sectionTitle}>

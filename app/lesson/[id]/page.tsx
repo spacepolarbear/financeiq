@@ -387,14 +387,15 @@ setLesson(lessonToUse)
   }, [lesson])
 
   // ─── Handle quiz complete ───
-async function handleQuizComplete(passed, score) {
-  setQuizPassed(passed)
+async function handleQuizComplete(xpEarned, results) {
+  const score = results ? Math.round((results.filter(r => r.attempts === 1).length / results.length) * 100) : 100
+  setQuizPassed(score >= 50)
   setQuizScore(score)
 
   if (lesson.has_simulation && lesson.simulation) {
     setPhase('simulation')
   } else {
-    await finishLesson(score, 0)
+    await finishLesson(score, xpEarned)
   }
 }
 
@@ -406,23 +407,20 @@ async function handleQuizComplete(passed, score) {
 
   // ─── Finish lesson ───
   async function finishLesson(score, bonusXP) {
-    if (!user || !lesson) return
+  if (!user || !lesson) return
 
-    const baseXP   = lesson.xp_reward || 10
-    const quizBonus = quizPassed ? 5 : 0
-    const earned   = baseXP + quizBonus + (bonusXP || 0)
-    setTotalXP(earned)
+  const earned = bonusXP || 0
+  setTotalXP(earned)
 
-    // Save progress and update streak in parallel
-    await Promise.all([
-      completeLesson(user.id, lesson.id || lessonId, score, earned),
-      updateStreak(user.id),
-    ])
+  await Promise.all([
+    completeLesson(user.id, lesson.id || lessonId, score, earned),
+    updateStreak(user.id),
+  ])
 
-    setPhase('complete')
-    setShowCelebration(true)
-    setTimeout(() => setShowCelebration(false), 3000)
-  }
+  setPhase('complete')
+  setShowCelebration(true)
+  setTimeout(() => setShowCelebration(false), 3000)
+}
 
   // ─── Loading ───
   if (loading || !lesson) {
@@ -466,11 +464,11 @@ async function handleQuizComplete(passed, score) {
             <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--stone-400)', marginBottom: '14px' }}>
               XP Earned
             </div>
-            {[
-              { label: 'Lesson completed', xp: lesson.xp_reward || 10 },
-              quizPassed && { label: 'Quiz bonus', xp: 5 },
-              simXP > 0 && { label: 'Simulation bonus', xp: simXP },
-            ].filter(Boolean).map((row, i) => (
+            
+{[
+  totalXP > 0 && { label: 'Quiz performance', xp: totalXP },
+  simXP > 0 && { label: 'Simulation bonus', xp: simXP },
+].filter(row => row && row.xp > 0).map((row, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px', color: 'var(--stone-700)' }}>
                 <span>{row.label}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--penny-500)' }}>+{row.xp} XP</span>
