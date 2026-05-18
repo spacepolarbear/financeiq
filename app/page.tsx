@@ -85,7 +85,7 @@ export default function LandingPage() {
           <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: '20px', color: 'var(--penny-600)', letterSpacing: '-0.3px' }}>penny</span>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <Link href="/auth" style={{
+          <Link href="/auth?mode=login" style={{
             fontSize: '14px',
             fontWeight: 500,
             color: 'var(--stone-600)',
@@ -94,8 +94,8 @@ export default function LandingPage() {
           }}>
             Log in
           </Link>
-          <Link href="/auth" className="btn btn-primary btn-sm">
-            Get started free →
+          <Link href="/auth?mode=signup" className="btn btn-primary btn-sm">
+                    Get started free →
           </Link>
         </div>
       </nav>

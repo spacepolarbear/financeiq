@@ -8,7 +8,9 @@
 // or /dashboard (returning users).
 // ─────────────────────────────────────────────────────────────
 
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signUp, signIn, getProfile } from '../../lib/supabase'
 
@@ -27,6 +29,14 @@ export default function AuthPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
   const [success, setSuccess]   = useState(null)
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+  const mode = searchParams.get('mode')
+  if (mode === 'login') setMode('login')
+  else setMode('signup')
+}, [searchParams])
 
   // ─── Handle Submit ───
   async function handleSubmit(e) {

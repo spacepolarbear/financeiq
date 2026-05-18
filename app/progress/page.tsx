@@ -1,3 +1,4 @@
+//@ts-nocheck
 'use client'
 
 // app/progress/page.js

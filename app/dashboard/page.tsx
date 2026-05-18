@@ -13,18 +13,18 @@ import { supabase, getCurrentUser, getProfile, getStreak, getLessonProgress, sig
 
 // ─── Module data (matches our 12 modules) ───────────────────
 const MODULES = [
-  { id: 1,  emoji: '💰', title: 'Budgeting & Cash Flow',   color: '#d4781a', bg: '#fdf8f0', border: '#f5d9a8' },
-  { id: 2,  emoji: '🏦', title: 'Banking',                  color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-  { id: 3,  emoji: '⛓️', title: 'Debt Management',          color: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
-  { id: 4,  emoji: '📊', title: 'Credit & Credit Scores',   color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-  { id: 5,  emoji: '📈', title: 'Investing',                color: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
-  { id: 6,  emoji: '🛡️', title: 'Insurance',               color: '#db2777', bg: '#fdf2f8', border: '#f9a8d4' },
-  { id: 7,  emoji: '🌅', title: 'Retirement Planning',      color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
-  { id: 8,  emoji: '🧾', title: 'Taxes',                    color: '#b45309', bg: '#fffbeb', border: '#fcd34d' },
-  { id: 9,  emoji: '🏠', title: 'Housing & Real Estate',    color: '#15803d', bg: '#f0fdf4', border: '#86efac' },
-  { id: 10, emoji: '💼', title: 'Career & Income Growth',   color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
-  { id: 11, emoji: '🎯', title: 'Major Life Events',        color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
-  { id: 12, emoji: '🧠', title: 'Psychology of Money',      color: '#6d28d9', bg: '#f5f3ff', border: '#c4b5fd' },
+  { id: 1,  lesson_count: 12, emoji: '💰', title: 'Budgeting & Cash Flow',   color: '#d4781a', bg: '#fdf8f0', border: '#f5d9a8' },
+  { id: 2,  lesson_count: 12, emoji: '🏦', title: 'Banking',                  color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+  { id: 3,  lesson_count: 12, emoji: '⛓️', title: 'Debt Management',          color: '#16a34a', bg: '#f0fdf4', border: '#86efac' },
+  { id: 4,  lesson_count: 12, emoji: '📊', title: 'Credit & Credit Scores',   color: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
+  { id: 5,  lesson_count: 12, emoji: '📈', title: 'Investing',                color: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
+  { id: 6,  lesson_count: 12, emoji: '🛡️', title: 'Insurance',               color: '#db2777', bg: '#fdf2f8', border: '#f9a8d4' },
+  { id: 7,  lesson_count: 12, emoji: '🌅', title: 'Retirement Planning',      color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
+  { id: 8,  lesson_count: 12, emoji: '🧾', title: 'Taxes',                    color: '#b45309', bg: '#fffbeb', border: '#fcd34d' },
+  { id: 9,  lesson_count: 12, emoji: '🏠', title: 'Housing & Real Estate',    color: '#15803d', bg: '#f0fdf4', border: '#86efac' },
+  { id: 10, lesson_count: 12, emoji: '💼', title: 'Career & Income Growth',   color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
+  { id: 11, lesson_count: 12, emoji: '🎯', title: 'Major Life Events',        color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
+  { id: 12, lesson_count: 12, emoji: '🧠', title: 'Psychology of Money',      color: '#6d28d9', bg: '#f5f3ff', border: '#c4b5fd' },
 ]
 
 // ─── XP to Level ────────────────────────────────────────────
@@ -40,7 +40,7 @@ function xpToLevel(xp) {
 // ─── Component ───────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter()
-
+  const [lessonCounts, setLessonCounts] = useState({})
   const [user, setUser]           = useState(null)
   const [profile, setProfile]     = useState(null)
   const [streak, setStreak]       = useState(null)
@@ -72,7 +72,12 @@ export default function DashboardPage() {
   setProfile(profileRes.data)
   setStreak(streakRes.data)
   setProgress(progressRes.data || [])
-
+  // Calculate lesson counts per module
+  const counts = {}
+  ;(lessonsRes.data || []).forEach(l => {
+    counts[l.module_id] = (counts[l.module_id] || 0) + 1
+  })
+  setLessonCounts(counts)
   // Find next incomplete lesson
   const completedIds = new Set((completedRes.data || []).map(l => l.lesson_id))
 const next = (lessonsRes.data || []).find(l => !completedIds.has(l.id))
@@ -439,7 +444,7 @@ onClick={() => router.push(`/lesson/${nextLesson ? nextLesson.lesson_number.repl
         {MODULES.map((mod) => {
           const modProgress = progress.filter(p => p.lessons?.module_id === mod.id)
           const completed = modProgress.filter(p => p.status === 'completed').length
-          const total = modProgress.length || 0
+          const total = lessonCounts[mod.id] || 12
 
           return (
             <div
@@ -461,8 +466,8 @@ onClick={() => router.push(`/lesson/${nextLesson ? nextLesson.lesson_number.repl
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={S.moduleTitle}>{mod.title}</div>
                 <div style={S.moduleProgress}>
-                  {total > 0 ? `${completed}/${total} lessons` : 'Not started'}
-                </div>
+                  {completed > 0 ? `${completed}/${total} lessons` : 'Not started'}
+              </div>
                 {total > 0 && (
                   <div className="progress-track" style={{ height: '4px', marginTop: '6px' }}>
                     <div
