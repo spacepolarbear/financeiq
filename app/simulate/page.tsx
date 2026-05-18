@@ -15,6 +15,20 @@ import BottomNav from '../../components/BottomNav'
 
 const SIMULATIONS = [
   {
+  key:       'survive-the-month',
+  emoji:     '🏆',
+  title:     'Survive the Month',
+  desc:      'Module 1 Capstone. Pick a character, face 4 weeks of real financial decisions. Your choices shape the outcome.',
+  difficulty:'beginner',
+  duration:  '15 min',
+  xp:        50,
+  premium:   false,
+  tags:      ['budgeting', 'capstone', 'module 1'],
+  color:     'var(--penny-600)',
+  bg:        'var(--penny-50)',
+  border:    'var(--penny-200)',
+  },
+  {
     key:       'survive_college_debt',
     emoji:     '🎓',
     title:     'Survive College with Debt',
